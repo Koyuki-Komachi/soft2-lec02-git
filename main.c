@@ -1,48 +1,40 @@
+#include "darts.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
-//#include "darts.h"
 #include <unistd.h>
 #include <time.h>
 
 #define RADIUS 20
 
-typedef struct point{
-    double x;
-    double y;
-} Point;
 
-typedef struct board{
-    char space[2*RADIUS + 1][4 * RADIUS + 3];
-    double radius;
-} Board;
-
+// 初期化して円を表示する
 void my_init_board(Board *b) {
-    for (int y = -RADIUS; y <= RADIUS; ++y) {
-        for (int x = -2 * RADIUS - 1; x <= 2 * RADIUS + 1; ++x) {
-            b->radius = sqrt((x / 2.0) * (x / 2.0)  + y * y);
-            if (b->radius < RADIUS + 0.5 && b->radius > RADIUS - 0.5) {
+    for (int y = 0; y <= 2 * RADIUS; ++y) {
+        for (int x = 0; x < 4 * RADIUS; ++x) {
+            double distance = sqrt((x / 2.0 - RADIUS) * (x / 2.0 - RADIUS) + (y - RADIUS) * (y - RADIUS));
+            if (distance < RADIUS + 0.5 && distance > RADIUS - 0.5) {
                 b->space[y][x] = '+';
-                printf("%c", b->space[y][x]);
             }else {
                 b->space[y][x] = ' ';
-                printf("%c", b->space[y][x]);
             }
+            b->space[y][4 * RADIUS] = '\0';
+            b->space[y][4 * RADIUS + 1] = '\n';
         }
-        printf("\n");
     }
 }
 
+// 盤面を表示
 void my_print_board(Board *b) {
-    for (int y = -RADIUS; y <= RADIUS; ++y) {
-        for (int x = -2 * RADIUS -1; x <= 2 * RADIUS + 1; ++x) {
+    for (int y = 0; y <= 2 * RADIUS; ++y) {
+        for (int x = 0; x < 4 * RADIUS + 2; ++x) {
             printf("%c", b->space[y][x]);
         }
-        printf("\n");
     }
 }
 
+// 分散が等方向一定の正規分布の乱数を生成する
 Point my_iso_gauss_rand(Point mu, double stddev) {
     Point p;
     double u1 = (double)rand() / RAND_MAX;
@@ -54,12 +46,15 @@ Point my_iso_gauss_rand(Point mu, double stddev) {
     return p;
 }
 
+// i回目 (1-3) が盤面内なら数字でプロット
 void my_plot_throw(Board *b, Point p, int i) {
-    if (p.x > -20 && p.x < 20 && p.y > -20 && p.y < 20) {
-        b->space[(int)p.y][(int)p.x * 2] = 'i';
+    if (p.x + 20 > 0 && p.x + 20 < 40 && p.y + 20 > 0 && p.y + 20 < 40) {
+        char char_i = i + '0';
+        b->space[(int)(p.y + 20)][(int)(2 * (p.x + 20))] = char_i;
     }
 }
 
+// 座標が有効（得点圏内）ならtrueを返す
 bool my_is_valid_point(Board *b, Point p) {
     double distance = sqrt(p.x * p.x + p.y * p.y);
     if (distance < 20) {
@@ -69,6 +64,7 @@ bool my_is_valid_point(Board *b, Point p) {
     }
 }
 
+// 座標を (? ?) で表示（改行なし）
 void my_print_point(Point p) {
     printf("(%f %f)", p.x, p.y);
 }
